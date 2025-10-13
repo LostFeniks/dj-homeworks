@@ -69,13 +69,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'website.wsgi.application'
 
+FIXTURE_DIRS = [
+    os.path.join(BASE_DIR, "2.2-databases-2/orm_migrations"),
+]
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'netology_orm_migrations',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -130,4 +131,6 @@ try:
     from .settings_local import *
 except ImportError:
     pass
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
