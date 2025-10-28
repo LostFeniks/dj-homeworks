@@ -18,8 +18,15 @@ from django.urls import path, include
 
 from rest_framework.routers import DefaultRouter
 
+from advertisements.views import AdvertisementViewSet
+
 router = DefaultRouter()
-# TODO: подключите `AdvertisementViewSet`
+router.register(r'advertisements', AdvertisementViewSet, basename='advertisement')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
+]
 
 
 urlpatterns = [

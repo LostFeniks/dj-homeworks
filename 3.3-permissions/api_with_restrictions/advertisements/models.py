@@ -10,6 +10,9 @@ class AdvertisementStatusChoices(models.TextChoices):
 
 
 class Advertisement(models.Model):
+    class Status(models.TextChoices):
+        OPEN = "OPEN", "Open"
+        CLOSED = "CLOSED", "Closed"
     """Объявление."""
 
     title = models.TextField()
@@ -28,3 +31,6 @@ class Advertisement(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
+    def __str__(self):
+        return f"{self.title} ({self.status})"

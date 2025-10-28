@@ -14,6 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class AdvertisementSerializer(serializers.ModelSerializer):
+    author = serializers.PrimaryKeyRelatedField(read_only=True)
     """Serializer для объявления."""
 
     creator = UserSerializer(
@@ -27,19 +28,31 @@ class AdvertisementSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Метод для создания"""
-
-        # Простановка значения поля создатель по-умолчанию.
-        # Текущий пользователь является создателем объявления
-        # изменить или переопределить его через API нельзя.
-        # обратите внимание на `context` – он выставляется автоматически
-        # через методы ViewSet.
-        # само поле при этом объявляется как `read_only=True`
-        validated_data["creator"] = self.context["request"].user
+        request = self.context.get('request')
+        validated_data['author'] = request.user
         return super().create(validated_data)
 
     def validate(self, data):
         """Метод для валидации. Вызывается при создании и обновлении."""
 
-        # TODO: добавьте требуемую валидацию
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
 
+        if user is None or not user.is_authenticated:
+            return data
+
+
+        new_status = data.get('status', None)
+        if self.instance is None:
+            status_to_check = new_status or Advertisement.Status.OPEN
+            if status_to_check == Advertisement.Status.OPEN:
+                open_ads_count = Advertisement.objects.filter(author=user, status=Advertisement.Status.OPEN).count()
+                if open_ads_count >= 10:
+                    raise serializers.ValidationError("Нельзя создать более 10 открытых объявлений.")
+        else:
+            if new_status == Advertisement.Status.OPEN and self.instance.status != Advertisement.Status.OPEN:
+                open_ads_count = Advertisement.objects.filter(author=user, status=Advertisement.Status.OPEN).exclude(
+                    pk=self.instance.pk).count()
+                if open_ads_count >= 10:
+                    raise serializers.ValidationError("Нельзя иметь более 10 открытых объявлений.")
         return data
